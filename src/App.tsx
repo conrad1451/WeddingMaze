@@ -4,7 +4,9 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
 
-function App() {
+import MazeGame from "./MazeGame.tsx"
+
+function OldApp() {
   const [count, setCount] = useState(0)
 
   return (
@@ -119,4 +121,9 @@ function App() {
   )
 }
 
+function App(){
+  const myChoice = 2;
+
+   return (myChoice === 1 ? <OldApp/>:<MazeGame/>)
+}
 export default App
