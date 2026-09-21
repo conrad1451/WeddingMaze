@@ -1,19 +1,19 @@
+// MazeGame.tsx
+
 // CHQ: Claude AI (Haiku) generated file
 
-// MazeGame.tsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './MazeGame.css';
+
+// CHQ: Claude AI (Sonnet): Wall and Direction types replace 
+// the invalid keyof typeof lines.
+type Wall = 'top' | 'right' | 'bottom' | 'left';
+type Direction = 'up' | 'down' | 'left' | 'right';
 
 interface Cell {
   x: number;
   y: number;
-  walls: {
-    top: boolean;
-    right: boolean;
-    bottom: boolean;
-    left: boolean;
-  };
-  visited: boolean;
+  walls: Record<Wall, boolean>;
 }
 
 interface Position {
@@ -24,152 +24,193 @@ interface Position {
 const MAZE_SIZE = 11;
 const CELL_SIZE = 40;
 const WALL_WIDTH = 2;
+const PADDING = WALL_WIDTH; // keeps the outer walls from being clipped by the SVG edge
+const GOAL: Position = { x: MAZE_SIZE - 1, y: MAZE_SIZE - 1 };
+const MOVE_DELAY_MS = 110; // minimum time between steps while a key is held
+
+const DIRECTIONS: Record<Direction, { dx: number; dy: number; wall: Wall; opposite: Wall }> = {
+  up: { dx: 0, dy: -1, wall: 'top', opposite: 'bottom' },
+  right: { dx: 1, dy: 0, wall: 'right', opposite: 'left' },
+  down: { dx: 0, dy: 1, wall: 'bottom', opposite: 'top' },
+  left: { dx: -1, dy: 0, wall: 'left', opposite: 'right' },
+};
+
+const KEY_TO_DIRECTION: Record<string, Direction> = {
+  arrowup: 'up',
+  w: 'up',
+  arrowdown: 'down',
+  s: 'down',
+  arrowleft: 'left',
+  a: 'left',
+  arrowright: 'right',
+  d: 'right',
+};
+
+// CHQ: Claude AI (Sonnet): Fisher–Yates shuffle (unbiased, unlike sort(() => Math.random() - 0.5))
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// Recursive backtracking over the full grid. Every cell is reachable,
+// so the goal in the far corner is always reachable from the start.
+function generateMaze(): Cell[][] {
+  const grid: Cell[][] = Array.from({ length: MAZE_SIZE }, (_, y) =>
+    Array.from({ length: MAZE_SIZE }, (_, x) => ({
+      x,
+      y,
+      walls: { top: true, right: true, bottom: true, left: true },
+    }))
+  );
+  const visited: boolean[][] = Array.from({ length: MAZE_SIZE }, () =>
+    Array<boolean>(MAZE_SIZE).fill(false)
+  );
+
+  const carve = (x: number, y: number) => {
+    visited[y][x] = true;
+
+    for (const dir of shuffle(Object.values(DIRECTIONS))) {
+      const nx = x + dir.dx;
+      const ny = y + dir.dy;
+
+      if (nx >= 0 && nx < MAZE_SIZE && ny >= 0 && ny < MAZE_SIZE && !visited[ny][nx]) {
+        grid[y][x].walls[dir.wall] = false;
+        grid[ny][nx].walls[dir.opposite] = false;
+        carve(nx, ny);
+      }
+    }
+  };
+
+  carve(0, 0);
+  return grid;
+}
+
+const StickFigure: React.FC<{ x: number; y: number }> = ({ x, y }) => {
+  const cx = x * CELL_SIZE + CELL_SIZE / 2;
+  const cy = y * CELL_SIZE + CELL_SIZE / 2;
+
+  const headRadius = 6;
+  const headY = cy - 10; // head spans cy-16 .. cy-4
+  const neckY = headY + headRadius; // body starts where the head ends
+  const hipY = cy + 7;
+  const shoulderY = neckY + 3;
+
+  return (
+    <g>
+      {/* Head */}
+      <circle cx={cx} cy={headY} r={headRadius} fill="#ff6b6b" stroke="#000" strokeWidth="1" />
+      {/* Body */}
+      <line x1={cx} y1={neckY} x2={cx} y2={hipY} stroke="#000" strokeWidth="2" strokeLinecap="round" />
+      {/* Arms */}
+      <line x1={cx} y1={shoulderY} x2={cx - 8} y2={shoulderY + 4} stroke="#000" strokeWidth="2" strokeLinecap="round" />
+      <line x1={cx} y1={shoulderY} x2={cx + 8} y2={shoulderY + 4} stroke="#000" strokeWidth="2" strokeLinecap="round" />
+      {/* Legs */}
+      <line x1={cx} y1={hipY} x2={cx - 5} y2={hipY + 10} stroke="#000" strokeWidth="2" strokeLinecap="round" />
+      <line x1={cx} y1={hipY} x2={cx + 5} y2={hipY + 10} stroke="#000" strokeWidth="2" strokeLinecap="round" />
+    </g>
+  );
+};
 
 const MazeGame: React.FC = () => {
-  const [maze, setMaze] = useState<Cell[][]>([]);
-  const [playerPos, setPlayerPos] = useState<Position>({ x: 1, y: 1 });
+  const [maze, setMaze] = useState<Cell[][]>(generateMaze);
+  const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
   const [won, setWon] = useState(false);
-  const keysPressed = useRef<{ [key: string]: boolean }>({});
 
-  // Generate maze using recursive backtracking
-  const generateMaze = useCallback((): Cell[][] => {
-    const grid: Cell[][] = Array(MAZE_SIZE)
-      .fill(null)
-      .map((_, y) =>
-        Array(MAZE_SIZE)
-          .fill(null)
-          .map((_, x) => ({
-            x,
-            y,
-            walls: { top: true, right: true, bottom: true, left: true },
-            visited: false,
-          }))
-      );
+  // Lets the keyboard handlers read the latest maze without re-subscribing.
+  const mazeRef = useRef<Cell[][]>(maze);
+  useEffect(() => {
+    mazeRef.current = maze;
+  }, [maze]);
 
-    const carve = (x: number, y: number) => {
-      grid[y][x].visited = true;
-      const directions = [
-        { x: 0, y: -1, wall: 'top', opposite: 'bottom' },
-        { x: 1, y: 0, wall: 'right', opposite: 'left' },
-        { x: 0, y: 1, wall: 'bottom', opposite: 'top' },
-        { x: -1, y: 0, wall: 'left', opposite: 'right' },
-      ].sort(() => Math.random() - 0.5);
+  // Move one cell in a single direction, respecting walls. Pure updater: no side effects.
+  const move = useCallback((direction: Direction) => {
+    const { dx, dy, wall } = DIRECTIONS[direction];
 
-      for (const dir of directions) {
-        const nx = x + dir.x;
-        const ny = y + dir.y;
+    setPlayerPos((prev) => {
+      const cell = mazeRef.current[prev.y]?.[prev.x];
+      if (!cell || cell.walls[wall]) return prev;
 
-        if (nx >= 0 && nx < MAZE_SIZE && ny >= 0 && ny < MAZE_SIZE && !grid[ny][nx].visited) {
-          grid[y][x].walls[dir.wall as keyof typeof grid[y][x].walls] = false;
-          grid[ny][nx].walls[dir.opposite as keyof typeof grid[ny][nx].walls] = false;
-          carve(nx, ny);
-        }
-      }
-    };
-
-    carve(1, 1);
-
-    // Ensure entrance and exit
-    grid[1][1].walls.left = false;
-    grid[MAZE_SIZE - 2][MAZE_SIZE - 2].walls.right = false;
-
-    return grid;
+      const next = { x: prev.x + dx, y: prev.y + dy };
+      if (next.x < 0 || next.x >= MAZE_SIZE || next.y < 0 || next.y >= MAZE_SIZE) return prev;
+      return next;
+    });
   }, []);
 
+  // Win detection lives in an effect instead of inside the state updater.
   useEffect(() => {
-    setMaze(generateMaze());
-    setPlayerPos({ x: 1, y: 1 });
-    setWon(false);
-  }, [generateMaze]);
+    if (playerPos.x === GOAL.x && playerPos.y === GOAL.y) {
+      setWon(true);
+    }
+  }, [playerPos]);
 
+  // Keyboard input: one axis per step, most recently pressed key wins, rate-limited.
   useEffect(() => {
+    if (won) return;
+
+    const held: Direction[] = [];
+    let lastMove = 0;
+
+    const step = () => {
+      const direction = held[held.length - 1];
+      if (!direction) return;
+
+      const now = performance.now();
+      if (now - lastMove < MOVE_DELAY_MS) return;
+
+      lastMove = now;
+      move(direction);
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      keysPressed.current[e.key.toLowerCase()] = true;
+      const direction = KEY_TO_DIRECTION[e.key.toLowerCase()];
+      if (!direction) return;
+
+      e.preventDefault(); // stop arrow keys from scrolling the page
+      if (e.repeat) return;
+
+      const index = held.indexOf(direction);
+      if (index !== -1) held.splice(index, 1);
+      held.push(direction);
+      step(); // respond immediately to a fresh key press
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      keysPressed.current[e.key.toLowerCase()] = false;
+      const direction = KEY_TO_DIRECTION[e.key.toLowerCase()];
+      if (!direction) return;
+
+      const index = held.indexOf(direction);
+      if (index !== -1) held.splice(index, 1);
+    };
+
+    // Avoid "stuck" keys if the window loses focus while a key is down.
+    const handleBlur = () => {
+      held.length = 0;
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    const interval = setInterval(step, 20); // repeats the step while a key is held
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+      clearInterval(interval);
     };
-  }, []);
-
-  useEffect(() => {
-    const gameLoop = setInterval(() => {
-      setPlayerPos((prev) => {
-        if (won) return prev;
-
-        let newX = prev.x;
-        let newY = prev.y;
-
-        if (keysPressed.current['arrowup'] || keysPressed.current['w']) newY = Math.max(1, prev.y - 1);
-        if (keysPressed.current['arrowdown'] || keysPressed.current['s']) newY = Math.min(MAZE_SIZE - 2, prev.y + 1);
-        if (keysPressed.current['arrowleft'] || keysPressed.current['a']) newX = Math.max(1, prev.x - 1);
-        if (keysPressed.current['arrowright'] || keysPressed.current['d']) newX = Math.min(MAZE_SIZE - 2, prev.x + 1);
-
-        // Check collision with walls
-        if (maze.length > 0) {
-          const currentCell = maze[prev.y]?.[prev.x];
-          const nextCell = maze[newY]?.[newX];
-
-          if (currentCell && nextCell) {
-            // Check if we can move in that direction
-            if (newY < prev.y && currentCell.walls.top) return prev;
-            if (newY > prev.y && currentCell.walls.bottom) return prev;
-            if (newX < prev.x && currentCell.walls.left) return prev;
-            if (newX > prev.x && currentCell.walls.right) return prev;
-          }
-        }
-
-        // Check win condition
-        if (newX === MAZE_SIZE - 2 && newY === MAZE_SIZE - 2) {
-          setWon(true);
-        }
-
-        return { x: newX, y: newY };
-      });
-    }, 50);
-
-    return () => clearInterval(gameLoop);
-  }, [maze, won]);
+  }, [won, move]);
 
   const resetGame = () => {
     setMaze(generateMaze());
-    setPlayerPos({ x: 1, y: 1 });
+    setPlayerPos({ x: 0, y: 0 });
     setWon(false);
   };
 
-  const drawStickFigure = (x: number, y: number): JSX.Element => {
-    const centerX = x * CELL_SIZE + CELL_SIZE / 2;
-    const centerY = y * CELL_SIZE + CELL_SIZE / 2;
-    const headRadius = 8;
-    const bodyLength = 12;
-    const armLength = 8;
-    const legLength = 10;
-
-    return (
-      <g key="stick-figure">
-        {/* Head */}
-        <circle cx={centerX} cy={centerY - bodyLength / 2} r={headRadius} fill="#ff6b6b" stroke="#000" strokeWidth="1" />
-        {/* Body */}
-        <line x1={centerX} y1={centerY - bodyLength / 2 + headRadius} x2={centerX} y2={centerY + bodyLength / 2} stroke="#000" strokeWidth="2" />
-        {/* Left Arm */}
-        <line x1={centerX} y1={centerY - bodyLength / 4} x2={centerX - armLength} y2={centerY - bodyLength / 4 - 3} stroke="#000" strokeWidth="2" />
-        {/* Right Arm */}
-        <line x1={centerX} y1={centerY - bodyLength / 4} x2={centerX + armLength} y2={centerY - bodyLength / 4 - 3} stroke="#000" strokeWidth="2" />
-        {/* Left Leg */}
-        <line x1={centerX} y1={centerY + bodyLength / 2} x2={centerX - 5} y2={centerY + bodyLength / 2 + legLength} stroke="#000" strokeWidth="2" />
-        {/* Right Leg */}
-        <line x1={centerX} y1={centerY + bodyLength / 2} x2={centerX + 5} y2={centerY + bodyLength / 2 + legLength} stroke="#000" strokeWidth="2" />
-      </g>
-    );
-  };
+  const svgSize = MAZE_SIZE * CELL_SIZE + PADDING * 2;
 
   return (
     <div className="maze-container">
@@ -179,65 +220,19 @@ const MazeGame: React.FC = () => {
         <button onClick={resetGame}>New Game</button>
       </div>
 
-      {maze.length > 0 && (
-        <svg
-          width={MAZE_SIZE * CELL_SIZE}
-          height={MAZE_SIZE * CELL_SIZE}
-          className="maze-svg"
-          style={{ border: '2px solid black', background: 'white' }}
-        >
-          {/* Draw maze walls */}
-          {maze.map((row, y) =>
-            row.map((cell, x) => (
-              <g key={`cell-${x}-${y}`}>
-                {cell.walls.top && (
-                  <line
-                    x1={x * CELL_SIZE}
-                    y1={y * CELL_SIZE}
-                    x2={(x + 1) * CELL_SIZE}
-                    y2={y * CELL_SIZE}
-                    stroke="black"
-                    strokeWidth={WALL_WIDTH}
-                  />
-                )}
-                {cell.walls.right && (
-                  <line
-                    x1={(x + 1) * CELL_SIZE}
-                    y1={y * CELL_SIZE}
-                    x2={(x + 1) * CELL_SIZE}
-                    y2={(y + 1) * CELL_SIZE}
-                    stroke="black"
-                    strokeWidth={WALL_WIDTH}
-                  />
-                )}
-                {cell.walls.bottom && (
-                  <line
-                    x1={x * CELL_SIZE}
-                    y1={(y + 1) * CELL_SIZE}
-                    x2={(x + 1) * CELL_SIZE}
-                    y2={(y + 1) * CELL_SIZE}
-                    stroke="black"
-                    strokeWidth={WALL_WIDTH}
-                  />
-                )}
-                {cell.walls.left && (
-                  <line
-                    x1={x * CELL_SIZE}
-                    y1={y * CELL_SIZE}
-                    x2={x * CELL_SIZE}
-                    y2={(y + 1) * CELL_SIZE}
-                    stroke="black"
-                    strokeWidth={WALL_WIDTH}
-                  />
-                )}
-              </g>
-            ))
-          )}
-
-          {/* Draw goal marker */}
+      <svg
+        width={svgSize}
+        height={svgSize}
+        className="maze-svg"
+        role="img"
+        aria-label="Maze. Reach the green square in the bottom-right corner."
+        style={{ background: 'white' }}
+      >
+        <g transform={`translate(${PADDING}, ${PADDING})`}>
+          {/* Goal marker */}
           <rect
-            x={(MAZE_SIZE - 2) * CELL_SIZE + 5}
-            y={(MAZE_SIZE - 2) * CELL_SIZE + 5}
+            x={GOAL.x * CELL_SIZE + 5}
+            y={GOAL.y * CELL_SIZE + 5}
             width={CELL_SIZE - 10}
             height={CELL_SIZE - 10}
             fill="#90ee90"
@@ -245,10 +240,30 @@ const MazeGame: React.FC = () => {
             strokeWidth="2"
           />
 
-          {/* Draw stick figure */}
-          {drawStickFigure(playerPos.x, playerPos.y)}
-        </svg>
-      )}
+          {/* Maze walls */}
+          {maze.map((row, y) =>
+            row.map((cell, x) => (
+              <g key={`cell-${x}-${y}`} stroke="black" strokeWidth={WALL_WIDTH} strokeLinecap="square">
+                {cell.walls.top && (
+                  <line x1={x * CELL_SIZE} y1={y * CELL_SIZE} x2={(x + 1) * CELL_SIZE} y2={y * CELL_SIZE} />
+                )}
+                {cell.walls.right && (
+                  <line x1={(x + 1) * CELL_SIZE} y1={y * CELL_SIZE} x2={(x + 1) * CELL_SIZE} y2={(y + 1) * CELL_SIZE} />
+                )}
+                {cell.walls.bottom && (
+                  <line x1={x * CELL_SIZE} y1={(y + 1) * CELL_SIZE} x2={(x + 1) * CELL_SIZE} y2={(y + 1) * CELL_SIZE} />
+                )}
+                {cell.walls.left && (
+                  <line x1={x * CELL_SIZE} y1={y * CELL_SIZE} x2={x * CELL_SIZE} y2={(y + 1) * CELL_SIZE} />
+                )}
+              </g>
+            ))
+          )}
+
+          {/* Player */}
+          <StickFigure x={playerPos.x} y={playerPos.y} />
+        </g>
+      </svg>
 
       {won && (
         <div className="win-screen">
