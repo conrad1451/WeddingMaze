@@ -122,7 +122,7 @@ function OldApp() {
 }
 
 function App(){
-  const myChoice = 2;
+  const myChoice:number = 2;
 
    return (myChoice === 1 ? <OldApp/>:<MazeGame/>)
 }
