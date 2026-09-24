@@ -10,9 +10,9 @@ import {
     PAR_SECONDS_PER_STEP,
     BASE_POINTS,
     POINTS_PER_LEVEL
-} from "./utils/gameConstants";
+} from "../utils/gameConstants";
 
-import type { LevelData } from "./utils/dataTypes";
+import type { LevelData } from "../utils/dataTypes";
 
 import { generateMaze } from "./generateMaze";
 

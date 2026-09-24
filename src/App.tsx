@@ -4,7 +4,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
 
-import MazeGame from "./MazeGame.tsx"
+import MazeGame from "./components/MazeGame.tsx"
 
 function OldApp() {
   const [count, setCount] = useState(0)

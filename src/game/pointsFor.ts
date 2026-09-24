@@ -1,7 +1,7 @@
 // src/pointsFor.ts
 
-import type { LevelData } from "./utils/dataTypes";
-import { MIN_TIME_FACTOR, DECAY_PAR_MULTIPLES } from "./utils/gameConstants";
+import type { LevelData } from "../utils/dataTypes";
+import { MIN_TIME_FACTOR, DECAY_PAR_MULTIPLES } from "../utils/gameConstants";
 
 export function pointsFor(
     levelData: LevelData, 

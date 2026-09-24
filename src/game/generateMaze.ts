@@ -1,9 +1,9 @@
 // Recursive backtracking over the full grid. Every cell is reachable,
 // so the goal in the far corner is always reachable from the start.
 
-import type { Cell } from "./utils/dataTypes";
+import type { Cell } from "../utils/dataTypes";
 
-import { DIRECTIONS } from "./utils/gameConstants"
+import { DIRECTIONS } from "../utils/gameConstants"
 
 import { shuffle } from "./shuffle";
 

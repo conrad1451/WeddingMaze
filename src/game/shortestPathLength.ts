@@ -1,7 +1,7 @@
 // src/shortestPathLength.ts
 
-import type { Cell, Position } from "./utils/dataTypes";
-import { DIRECTIONS } from "./utils/gameConstants";
+import type { Cell, Position } from "../utils/dataTypes";
+import { DIRECTIONS } from "../utils/gameConstants";
 
 // CHQ: Claude AI (Sonnet) generated function
 // Breadth-first search: fewest steps from (0, 0) to the far corner.

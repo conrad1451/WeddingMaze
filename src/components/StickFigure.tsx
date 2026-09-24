@@ -1,4 +1,4 @@
-import { BASE_FIGURE_CELL } from "./utils/gameConstants"
+import { BASE_FIGURE_CELL } from "../utils/gameConstants"
 
 // CHQ: Claude AI (Sonnet) edited - wedding theme: bride silhouette (veil + gown)
 // instead of a plain stick figure. Keeps the same scale-to-cellSize approach.

@@ -11,7 +11,7 @@ import type {
   Position,
   LevelData,
   Phase
-} from "./utils/dataTypes.ts"
+} from "../utils/dataTypes.ts"
 
 import {
   DIRECTIONS,
@@ -20,13 +20,13 @@ import {
   PADDING,
   WALL_WIDTH,
   TOTAL_LEVELS,
-} from "./utils/gameConstants"
+} from "../utils/gameConstants.ts"
 
-import { createLevel } from './createLevel.ts';
+import { createLevel } from '../game/createLevel.ts';
 
 import { StickFigure } from './StickFigure.tsx';
 
-import { pointsFor } from './pointsFor.ts';
+import { pointsFor } from '../game/pointsFor.ts';
 
 const formatSeconds = (seconds: number) => `${seconds.toFixed(1)}s`;
 
