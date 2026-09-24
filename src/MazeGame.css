@@ -1,21 +1,21 @@
-﻿/* CHQ: Claude AI (Haiku) generated file */
+﻿/* CHQ: Claude AI (Haiku) generated file, Claude AI (Sonnet) edited - wedding theme */
 
-css
 .maze-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #fdeef2 0%, #f6d9c4 45%, #eec988 100%);
+  font-family: 'Georgia', 'Times New Roman', serif;
   padding: 20px;
 }
 
 h1 {
-  color: white;
+  color: #6b4a3a;
   margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.5px;
 }
 
 .controls {
@@ -24,18 +24,20 @@ h1 {
   border-radius: 8px;
   margin-bottom: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f0d9b5;
 }
 
 .controls p {
   margin: 0 0 10px 0;
-  color: #333;
+  color: #6b4a3a;
   font-weight: bold;
 }
 
 .controls button {
   padding: 10px 20px;
   font-size: 16px;
-  background: #667eea;
+  font-family: inherit;
+  background: #c9a876;
   color: white;
   border: none;
   border-radius: 5px;
@@ -44,14 +46,19 @@ h1 {
 }
 
 .controls button:hover {
-  background: #764ba2;
+  background: #b08c5c;
+}
+
+.hud {
+  color: #6b4a3a;
+  font-weight: 600;
 }
 
 .maze-svg {
   display: block;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   cursor: move;
 }
 
@@ -61,7 +68,7 @@ h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(107, 74, 58, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,10 +82,12 @@ h1 {
   text-align: center;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.5s ease-out;
+  border: 2px solid #eec988;
+  max-width: 420px;
 }
 
 .win-message h2 {
-  color: #228b22;
+  color: #b08c5c;
   margin: 0 0 20px 0;
   font-size: 28px;
 }
@@ -86,7 +95,8 @@ h1 {
 .win-message button {
   padding: 12px 30px;
   font-size: 18px;
-  background: #228b22;
+  font-family: inherit;
+  background: #d4af37;
   color: white;
   border: none;
   border-radius: 6px;
@@ -95,7 +105,7 @@ h1 {
 }
 
 .win-message button:hover {
-  background: #1a6b1a;
+  background: #b8952c;
 }
 
 @keyframes slideIn {
@@ -103,6 +113,7 @@ h1 {
     transform: translateY(-50px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
