@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Decisions recorded for the WeddingMaze repo, reconstructed from the full git history (9 commits, 2026-08-30 to 2026-09-23, all times EDT) using `ADR-000-template.md`.
+Decisions recorded for the WeddingMaze repo, reconstructed from the full git history (10 commits, 2026-08-30 to 2026-09-23, all times EDT) using `ADR-000-template.md`.
 
 | ADR | Decision | Status | Date (EDT) | Source commits |
 | --- | --- | --- | --- | --- |
@@ -9,12 +9,13 @@ Decisions recorded for the WeddingMaze repo, reconstructed from the full git his
 | [003](ADR-003-recursive-backtracking-maze-generation.md) | Recursive backtracking over the full grid, Fisher-Yates shuffle | Accepted | 2026-09-21 04:30 | `70f6c18`, `2f6ade9`, `b0c8281` |
 | [004](ADR-004-grid-step-keyboard-input-model.md) | Discrete, rate-limited grid steps with a held-key stack | Accepted | 2026-09-21 04:30 | `70f6c18`, `2f6ade9` |
 | [005](ADR-005-attribute-ai-generated-code-with-comments.md) | `CHQ:` attribution comments for AI-generated code | Accepted | 2026-09-20 21:28 | `70f6c18` onward, `e9fc01f` |
-| [006](ADR-006-modular-files-with-central-types-and-constants.md) | Small modules with central types and tuning constants | Accepted | 2026-09-21 07:51 | `5d4b289`, `b0c8281` |
+| [006](ADR-006-modular-files-with-central-types-and-constants.md) | Small modules with central types and tuning constants | Accepted (layout superseded by ADR-012) | 2026-09-21 07:51 | `5d4b289`, `b0c8281` |
 | [007](ADR-007-twenty-level-difficulty-progression.md) | 20 levels: growing size, fading shortcuts, scaled cells | Accepted | 2026-09-21 10:33 | `b0c8281` |
 | [008](ADR-008-time-based-scoring-against-bfs-par.md) | Time-based scoring against a BFS-derived par | Accepted | 2026-09-21 10:33 | `b0c8281` |
 | [009](ADR-009-explicit-game-phase-state-machine.md) | Explicit game-phase state machine | Accepted | 2026-09-21 10:33 | `b0c8281` |
 | [010](ADR-010-wedding-theme-in-place-reskin.md) | Wedding theme applied by editing in place | Accepted | 2026-09-23 20:59 | `6c5af2f` |
 | [011](ADR-011-app-level-switch-between-template-and-game.md) | Vite template kept as `OldApp` behind a hard-coded switch | Accepted | 2026-09-20 21:28 | `70f6c18`, `9c5f36d` |
+| [012](ADR-012-folders-by-role-components-game-utils.md) | Role-based folders: `components/`, `game/`, `utils/` | Accepted | 2026-09-23 22:51 | `f0be0e8` |
 
 ## Notes on how these were written
 - **Sources:** Context and Decision sections come from commit messages and diffs. Where the log does not state a reason, the reasoning is marked "inferred". Please review those points, since only you know the real motivation.
@@ -35,3 +36,4 @@ Decisions recorded for the WeddingMaze repo, reconstructed from the full git his
 | `e9fc01f` | 2026-09-23 10:06:38 | docs: add git-diffs/ to .gitignore |
 | `9c5f36d` | 2026-09-23 18:53:26 | fix: add 'number' type to `myChoice` |
 | `6c5af2f` | 2026-09-23 20:59:12 | feat: add wedding theme |
+| `f0be0e8` | 2026-09-23 22:51:01 | refactor: organize src into components, game, and utils folders Group files by role so each has one obvious home: - components/: MazeGame.tsx, StickFigure.tsx,   MazeGame.css - game/: createLevel, generateMaze, pointsFor,   shortestPathLength, shuffle - utils/: dataTypes and gameConstants (unchanged) |

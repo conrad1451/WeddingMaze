@@ -1,7 +1,7 @@
 # ADR-006: Split game logic into small modules with central types and tuning constants
 
 ## Status
-- **Status:** Accepted
+- **Status:** Accepted (file layout superseded by ADR-012)
 - **Date:** 2026-09-21 07:51 EDT
 - **Authors:** Conrad Hansen-Quartey
 - **Deciders:** Conrad Hansen-Quartey
