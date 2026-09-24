@@ -3,7 +3,7 @@
 // CHQ: Claude AI (Haiku) generated file, Claude AI (Sonnet) edited - wedding theme, split into components, hooks and a reducer
 
 import { useCallback, useReducer } from 'react';
-import './MazeGame.css';
+import '../styles/MazeGame.css';
 
 import type { Direction } from "../utils/dataTypes.ts"
 
