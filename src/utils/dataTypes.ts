@@ -31,3 +31,24 @@ export interface LevelResult {
   seconds: number;
   points: number;
 }
+
+export interface UserStats {
+  userId: string;
+  username: string;
+  bestTime: number | null;
+  totalGames: number;
+  averageTime: number | null;
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  username: string;
+  bestTime: number;
+  totalGames: number;
+}
+export interface AuthUser {
+  userId: string;
+  email: string;
+  name: string;
+  sessionJwt: string;
+}

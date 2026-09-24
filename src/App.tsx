@@ -1,129 +1,152 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import React, { useState, useEffect } from "react";
+import MazeGame from "./components/MazeGame.tsx"
+import { setAuthToken } from "./services/api";
+// import { getLeaderboard, setAuthToken } from "./services/api";
+// import { getLeaderboard, setAuthToken, saveScore } from "./services/api";
+import { AuthModal } from "./components/AuthModal";
 import './App.css'
 
-import MazeGame from "./components/MazeGame.tsx"
+import {
+  saveAuthUser,
+  getAuthUser,
+  clearAuth,
+} from "./services/auth.ts";
+import type { AuthUser } from "./utils/dataTypes.ts";
+// import type { AuthUser, LeaderboardEntry } from "./utils/dataTypes.ts";
 
-function OldApp() {
-  const [count, setCount] = useState(0)
+import "./App.css";
+
+type View = "home" | "game" | "leaderboard";
+
+const HomeScreen = (
+  props: {
+    currentView: View;
+    setCurrentView: React.Dispatch<React.SetStateAction<View>>;
+  }
+) => {
+
+  const { currentView, setCurrentView } = props;
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+    <div className="game-container">
+      <section className="mode-selection">
+        <h2>Current view: {currentView}</h2>
+        <h2>Select Game</h2>
+          <button
+            key={"altar"}
+            className="btn btn-primary"
+            onClick={() => setCurrentView("game")}
+          >
+            Go to the Altar
+          </button>
+       </section>
+
+      <section className="leaderboard-section" style={{ marginTop: "25px" }}>
+        <h2>Leaderboard</h2>
         <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          key={"leaderboard"}
+          className="btn btn-primary"
+          onClick={() => setCurrentView("leaderboard")}
         >
-          Count is {count}
+          View Leaderboard
         </button>
       </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </div>
   )
+
 }
 
-function App(){
-  const myChoice:number = 2;
+export const App: React.FC = () => {
+  // const [boardSize, setBoardSize] = useState<number>(3);
+  const [currentView, setCurrentView] = useState<View>("home");
+  // const [leaderboardSize, setLeaderboardSize] = useState<number>(3);
+  // const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-   return (myChoice === 1 ? <OldApp/>:<MazeGame/>)
-}
-export default App
+  // Restore session on mount and after redirect back from auth provider
+  useEffect(() => {
+    const stored = getAuthUser();
+    if (stored) {
+      setAuthUser(stored);
+      setAuthToken(stored.sessionJwt);
+    }
+  }, []);
+
+  // Fetch leaderboard when target board size changes
+  // useEffect(() => {
+  //   getLeaderboard(leaderboardSize)
+  //     .then(setLeaderboard)
+  //     .catch((err) => console.error("Failed to fetch leaderboard:", err));
+  // }, [leaderboardSize]);
+
+  // const handleStartGame = (size: number) => {
+  //   setBoardSize(size);
+  //   setCurrentView("game");
+  // };
+
+  const handleAuthSuccess = (user: AuthUser) => {
+    setAuthUser(user);
+    saveAuthUser(user);
+    setAuthToken(user.sessionJwt);
+  };
+
+  const handleLogout = () => {
+    setAuthUser(null);
+    clearAuth();
+    setAuthToken(null);
+  };
+
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>Wedding Maze</h1>
+        <p>Prepare for the big day and walk the aisle in these mazes!</p>
+
+        {authUser ? (
+          <div className="user-info">
+            <span>Welcome, {authUser.name}!</span>
+            <button
+              className="btn btn-secondary btn-small"
+              onClick={handleLogout}
+            >
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <div className="user-info">
+            <button
+              className="btn btn-primary btn-small"
+              onClick={() => setShowAuthModal(true)}
+            >
+              Sign In
+            </button>
+          </div>
+        )}
+      </header>
+
+      <main className="app-main">
+        {currentView === "home" ? (
+          <div className="game-container">
+            <HomeScreen
+              currentView={currentView} 
+              setCurrentView={setCurrentView}
+            />
+          </div>
+        ) : (
+          <MazeGame/>
+        )}
+      </main>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={handleAuthSuccess}
+        elapsedTime={0}
+        // elapsedTime?: number; // Made optional
+      />
+    </div>
+  );
+};
+
+export default App;
